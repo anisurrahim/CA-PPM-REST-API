@@ -1,0 +1,249 @@
+<gel:script
+  xmlns:core="jelly:core"
+  xmlns:gel="jelly:com.niku.union.gel.GELTagLibrary">
+
+<core:set var="jsonString">
+{
+ "_self": "http://samplehost:8080/ppm/rest/v1/projects",
+ "_links": {
+		  "trackMode": "http://samplehost:8080/ppm/rest/v1/lookups/prTrackMode/lookupValues",
+		  "manager": "http://samplehost:8080/ppm/rest/v1/lookups/BROWSE_PROJMGR/lookupValues",
+		  "pageLayout": "http://samplehost:8080/ppm/rest/v1/lookups/LOOKUP_PROJECT_PAGE_LAYOUT/lookupValues",
+		  "costType": "http://samplehost:8080/ppm/rest/v1/lookups/LOOKUP_FIN_COSTTYPECODE/lookupValues",
+		  "financialStatus": "http://samplehost:8080/ppm/rest/v1/lookups/PAC_PROJECT_STATUS/lookupValues",
+		  "progress": "http://samplehost:8080/ppm/rest/v1/lookups/INVESTMENT_OBJ_PROGRESS/lookupValues",
+		  "percentCompleteCalcMethod": "http://samplehost:8080/ppm/rest/v1/lookups/PRJ_PERCENT_CALC_MODE/lookupValues",
+		  "currencyCode": "http://samplehost:8080/ppm/rest/v1/lookups/LOOKUP_ACTIVE_CURRENCIES/lookupValues",
+		  "assignmentPool": "http://samplehost:8080/ppm/rest/v1/lookups/ASSGN_POOL_TYPE/lookupValues",
+		  "status": "http://samplehost:8080/ppm/rest/v1/lookups/INVESTMENT_OBJ_STATUS/lookupValues",
+		  "chargeCode": "http://samplehost:8080/ppm/rest/v1/lookups/LOOKUP_CHARGE_CODES/lookupValues"
+            },
+"_results": [
+			{
+		 "_self": "http: //samplehost: 8080/ppm/rest/v1/projects/5000001",
+		 "_internalId ": "5000001",
+		 "code": "Alpha",
+		 "name": "PPM Alpha",
+		 "description": "New enhancements to PPM Alpha",
+		 "priority": 10,
+		 "isActive": true,
+		 "scheduleStart": "2015-04-01T08:00:00",
+		 "scheduleFinish": "2015-09-30T17:00:00",
+		 "isOpenForTimeEntry": true,
+		 "etc": 0,
+		 "costType": {
+				 "displayValue": "Operating",
+				 "_type": "lookup",
+				 "id": "OPERATING"
+			},
+			"isApproved": false,
+			"tasks": {
+						 "_self": "http://samplehost:8080/ppm/rest/v1/projects/5000001/tasks"
+			},
+			"actuals": 0,
+			"manager": {
+						 "displayValue": "John, Smith",
+						 "_type": "lookup",
+						 "id": "1"
+			},
+			"pageLayout": {
+						 "displayValue": "Project Default Layout",
+						 "_type": "lookup",
+						 "id": "50240"
+			},
+			"totalLaborEffort": 0,
+			"percentComplete": 0,			
+			"assignmentPool": {
+						 "displayValue": "Team Only",
+						 "_type": "lookup",
+						 "id": "0"
+			},
+			"lastUpdatedDate": "2015-04-01T08:38:31",
+			"createdDate": "2015-04-01T08:38:31",
+			"trackMode": {
+						 "displayValue": "PPM",
+						 "_type": "lookup",
+						 "id": "2"
+			},
+			"financialStatus": {
+						 "displayValue": "Hold",
+						 "_type": "lookup",
+						 "id": "H"
+			},
+			"progress": {
+						 "displayValue": "Not Started",
+						 "_type": "lookup",
+						 "id": "0"
+			},
+			"risk": null,
+			"percentCompleteCalcMethod": {
+						 "displayValue": "Manual",
+						 "_type": "lookup",
+						 "id": "0"
+			},
+			"currencyCode": {
+						 "displayValue": "USD",
+						 "_type": "lookup",
+						 "id": "USD"
+			},
+			"status": {
+						 "displayValue": "Unapproved",
+						 "_type": "lookup",
+						 "id": "0"
+			},
+			"chargeCode": null
+		}
+		],
+   "_errors": [
+		{
+			"resourceId": " Beta",
+			"errorMessage": "CMN-0007: Attribute 'name' is required.",
+			"errorCode": "validation.requiredFieldMissing"
+        }
+	]
+ }
+ </core:set>
+ <gel:log>______Anisur_______</gel:log>
+ <!-- Get JSONObject from response string -->
+<core:new className="org.json.JSONObject" var="J_ClarityPrjInfo" >
+	<core:arg type="java.lang.String" value="${jsonString}" />
+</core:new>    
+<!-- Get the values from response -->
+<core:set var="res"  value="${J_ClarityPrjInfo.get('_results')}"/>
+ <gel:log>${res}</gel:log>
+ 
+	<core:new className='com.google.gson.Gson' var='gson'/>
+	<core:new className='com.google.gson.JsonArray' var='jsonArray'/>
+	
+	<core:invoke var='map' method='fromJson' on='${gson}'>
+		<core:arg type='java.lang.String' value="${J_ClarityPrjInfo.get('_results').toString()}"/>
+		<core:arg type='java.lang.Class' value='${jsonArray.getClass()}'/>
+	</core:invoke>
+
+	<core:forEach var="result" items='${map.iterator()}'>
+		 <gel:log>
+		 Name =  ${result.get('name')}, 
+		 description =  ${result.get('description')}, 
+		 isOpenForTimeEntry =  ${result.get('isOpenForTimeEntry')}, 
+		 isActive =  ${result.get('isActive')}
+		 </gel:log>
+	</core:forEach> 
+
+ <core:new className="com.google.gson.Gson" var="gson"/>
+ <core:new className="com.google.gson.internal.LinkedTreeMap" var="linkedTreeMap"/>
+ 
+ <core:invoke var="map" method = "fromJson" on="${gson}">
+	 <core:arg type="java.lang.String" value="${jsonString}"/>
+	 <core:arg type="java.lang.Class" value="${linkedTreeMap.getClass()}"/>
+ </core:invoke>
+
+  <gel:log>__________Rahim___________</gel:log>
+	<core:forEach var="result" items='${map.get("_results")}'>
+          <gel:log>
+          description =  ${result.get('description')}, 
+		  costType =  ${result.get('costType').get('id')}, 
+          scheduleStart =  ${result.get('scheduleStart')}, 
+          scheduleFinish =  ${result.get('scheduleFinish')}
+          </gel:log>
+     </core:forEach>
+
+<core:set var="entries" value="${context.getVariables().entrySet().toArray()}" />
+
+<core:forEach var="entry" items="${entries}">
+	<core:if test="${!entry.getKey().equalsIgnoreCase('systemScope')}" >
+	   <gel:log> ${entry.getKey()} | ${entry.getValue()}</gel:log>
+	</core:if>
+</core:forEach>
+	<core:set var="jsonString1">
+		[
+		{
+		"self": "https://abc.xyz.com/rest/api/2/version/11400",
+		"id": "11400",
+		"description": "November 2017",
+		"name": "November",
+		"archived": false,
+		"released": false,
+		"startDate": "2017-10-24",
+		"releaseDate": "2017-11-20",
+		"overdue": true,
+		"userStartDate": "24/Oct/17",
+		"userReleaseDate": "20/Nov/17",
+		"projectId": 11219
+		},
+		{
+		"self": "https://abc.xyz.com/rest/api/2/version/11929",
+		"id": "11929",
+		"description": "December 2017 - Ph1",
+		"name": "December 2017",
+		"archived": false,
+		"released": false,
+		"startDate": "2017-12-01",
+		"releaseDate": "2017-12-12",
+		"overdue": false,
+		"userStartDate": "01/Dec/17",
+		"userReleaseDate": "12/Dec/17",
+		"projectId": 11219
+		},
+		{
+		"self": "https://abc.xyz.com/rest/api/2/version/11930",
+		"id": "11930",
+		"description": "December Ph 2 - 2017",
+		"name": "December - 2 2017",
+		"archived": false,
+		"released": false,
+		"startDate": "2017-12-13",
+		"releaseDate": "2017-12-22",
+		"overdue": false,
+		"userStartDate": "13/Dec/17",
+		"userReleaseDate": "22/Dec/17",
+		"projectId": 11219
+		},
+		{
+		"self": "https://abc.xyz.com/rest/api/2/version/11931",
+		"id": "11931",
+		"description": "December Ph3 - 2017",
+		"name": "December-3 2017",
+		"archived": false,
+		"released": false,
+		"startDate": "2017-12-23",
+		"releaseDate": "2017-12-31",
+		"overdue": false,
+		"userStartDate": "23/Dec/17",
+		"userReleaseDate": "31/Dec/17",
+		"projectId": 11219
+		},
+		{
+		"self": "https://abc.xyz.com/rest/api/2/version/11932",
+		"id": "11932",
+		"description": "January 2018",
+		"name": "January 2018",
+		"archived": false,
+		"released": false,
+		"startDate": "2018-01-01",
+		"releaseDate": "2018-01-24",
+		"overdue": false,
+		"userStartDate": "01/Jan/18",
+		"userReleaseDate": "24/Jan/18",
+		"projectId": 11219
+		}
+		]
+	</core:set>
+	
+	<core:new className='com.google.gson.Gson' var='gson'/>
+	<core:new className='com.google.gson.JsonArray' var='jsonArray'/>
+	
+	<core:invoke var='map' method='fromJson' on='${gson}'>
+		<core:arg type='java.lang.String' value='${jsonString1}'/>
+		<core:arg type='java.lang.Class' value='${jsonArray.getClass()}'/>
+	</core:invoke>
+
+	<core:forEach var="result" items='${map.iterator()}'>
+		 <gel:log>
+		 Name =  ${result.get('name')}, 
+		 description =  ${result.get('description')}, 
+		 scheduleStart =  ${result.get('startDate')}, 
+		 scheduleFinish =  ${result.get('releaseDate')}
+		 </gel:log>
+	</core:forEach>
+
+</gel:script>

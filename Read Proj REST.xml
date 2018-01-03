@@ -1,0 +1,116 @@
+<gel:script xmlns="http://www.w3.org/2001/XMLSchema"
+	xmlns:core="jelly:core"
+	xmlns:gel="jelly:com.niku.union.gel.GELTagLibrary"
+	xmlns:sql="jelly:sql" xmlns:xog="http://www.niku.com/xog"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:util="jelly:util">
+
+    <!--******************************************************************************-->
+    <!-- Reading Project Infromation -->
+    <!--******************************************************************************-->
+	<!-- *** Please Save Gel Parameter for proejct to fetch *** -->
+	<gel:parameter default="1" var="cl_ProjectInternalId"/>
+	<gel:parameter default="true" var="DebugClarity"/>	
+	<gel:parameter default="true" var="DebugTimings"/>
+	
+	<core:catch var="SuperException">   
+		<!--core:invokeStatic className="java.lang.System"   method="currentTimeMillis" var="milStart00"/-->
+
+		<gel:log><![CDATA[************ Clarity Project Information Extraction started  *********]]></gel:log>
+		<core:if test="${DebugClarity}">
+			<gel:log/><gel:log>Basic Auth Encoded 64: ${basicAuth}</gel:log>
+		</core:if>
+		
+		<!-- *** Setting REST URL for Getting Project Name and Objective ***    -->
+		<core:set var="httpRESTURL">${ClarityRestUrl}/projects/?fields=objective,name</core:set>
+		<!--core:set var="httpRESTURL">${ClarityRestUrl}/projects/?expand=(tasks=(fields=(code,startDate,costType)),teams)</core:set-->
+		
+		<core:if test="${DebugClarity}">
+			<gel:log/><gel:log>httpRESTURL: ${httpRESTURL}</gel:log>
+		</core:if>
+
+		<core:new className="java.net.URL" var="remoteURL" >
+			<core:arg type="java.lang.String" value="${httpRESTURL}" />
+		</core:new>  
+
+		<!-- *** Setting Connection Details *** -->
+		<core:set var="ClarityConnection" value="${remoteURL.openConnection()}"/> 
+		<core:expr value="${ClarityConnection.setDoOutput(true)}" /> 
+		<core:expr value="${ClarityConnection.setDoInput(true)}" />
+		<core:expr value="${ClarityConnection.setConnectTimeout(180000)}" />
+		<core:expr value="${ClarityConnection.setReadTimeout(180000)}" />
+		
+		<core:expr value='${ClarityConnection.setRequestMethod("GET")}'/> 
+		
+		<core:expr value='${ClarityConnection.setRequestProperty("Content-type", "application/json")}'/>
+		<core:expr value='${ClarityConnection.setRequestProperty("Accept", "application/json")}'/>
+		<core:expr value='${ClarityConnection.setRequestProperty("cache-control", "no-cache")}'/>
+		<core:expr value='${ClarityConnection.setRequestProperty("Authorization",  basicAuth)}'/>
+
+		<!-- *** Sending Request for Fetching Details from Connection ***   -->
+		<core:set var="void" value="${ClarityConnection.connect()}"/>
+		
+		<!-- *** Fetching Responce from Connection ***  -->                
+		<core:set var="CL_isAuthenticated" value="${ClarityConnection.getHeaderField(0)}" />
+		<core:set var="response_msg" value="${ClarityConnection.getResponseMessage()}" />
+		
+		<core:if test="${DebugClarity}">
+			<gel:log>Clarity isAuthenticated: ${CL_isAuthenticated}</gel:log>
+			<gel:log>Clarity response_msg: ${response_msg}</gel:log>
+		</core:if>
+		
+		<core:if test="${CL_isAuthenticated == 'HTTP/1.1 200'}">
+			<!-- *** Reading Input Stream form Connection ***   -->
+			<core:set var="httpInputStream" value="${ClarityConnection.getInputStream()}" />
+			
+			<core:new className="java.io.InputStreamReader" var="v_inputStreamReader">
+				<core:arg type="java.io.InputStream" value="${httpInputStream}"/>
+			</core:new>
+			<core:new className="java.io.BufferedReader" var="v_BufferReader">
+				<core:arg type="java.io.InputStreamReader" value="${v_inputStreamReader}"/>
+			</core:new> 
+
+			<!-- *** Responce Saved in Variable for Reading/Modification ***    -->
+			<core:set value="${v_BufferReader.readLine()}" var="ClarityProjectInfo"/>
+			<core:if test="${DebugClarity}">
+				<gel:log>httpData: ${ClarityProjectInfo}</gel:log>
+			</core:if>     
+
+			<!-- *** Closing Input Stream ***   -->
+			<core:set var="void" value="${httpInputStream.close()}" /> 
+			
+			<!-- Get JSONObject from response string -->
+			<core:new className="org.json.JSONObject" var="J_ClarityPrjInfo" >
+				<core:arg type="java.lang.String" value="${ClarityProjectInfo}" />
+			</core:new>    
+
+			<!-- Get the values from response -->
+			<core:set var="res"  value="${J_ClarityPrjInfo.get('_results')}"/>
+			 <gel:log>${res}</gel:log>
+			 
+				<core:new className='com.google.gson.Gson' var='gson'/>
+				<core:new className='com.google.gson.JsonArray' var='jsonArray'/>
+				
+				<core:invoke var='map' method='fromJson' on='${gson}'>
+					<core:arg type='java.lang.String' value="${J_ClarityPrjInfo.get('_results').toString()}"/>
+					<core:arg type='java.lang.Class' value='${jsonArray.getClass()}'/>
+				</core:invoke>
+
+			<core:forEach var="result" items='${map.iterator()}'>
+				 <gel:log>_______XXXX________
+				 Name =  ${result.get('name')}, 
+				 description =  ${result.get('description')}, 				 
+				 </gel:log>
+			</core:forEach> 
+		</core:if>
+		
+		<core:if test="${CL_isAuthenticated != 'HTTP/1.1 200'}">
+			<gel:log><![CDATA[************ Error while reading Project Information *********]]></gel:log>        
+		</core:if> 
+		<core:set var="void" value="${ClarityConnection.close()}"/>
+	</core:catch>	
+		<core:if test="${SuperException != null}">
+			<gel:log>Super Exception — ${SuperException}</gel:log>
+		</core:if>
+		
+</gel:script>

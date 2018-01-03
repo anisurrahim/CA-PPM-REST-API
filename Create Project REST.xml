@@ -1,0 +1,107 @@
+<gel:script xmlns="http://www.w3.org/2001/XMLSchema"
+	xmlns:core="jelly:core"
+	xmlns:gel="jelly:com.niku.union.gel.GELTagLibrary"
+	xmlns:sql="jelly:sql" xmlns:xog="http://www.niku.com/xog"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:util="jelly:util">
+   
+    <!-- ****************************************************************************** -->
+      <!--******************************************************************************-->
+    <!-- Creating Project Infromation -->
+    <!--******************************************************************************-->
+<gel:parameter default="true" var="DebugClarity"/>
+<core:catch var="SuperException">     
+<!--core:invokeStatic className="java.lang.System"   method="currentTimeMillis" var="milStart00"/-->
+<gel:log><![CDATA[************ Clarity Project creation started  *********]]></gel:log>
+<core:if test="${DebugClarity}">
+	<gel:log/><gel:log>Basic Auth Encoded 64: ${basicAuth}</gel:log>
+</core:if>
+
+ <!-- *** Setting REST URL for POSTing Project  ***    -->
+<core:set var="httpRESTURL">${ClarityRestUrl}/projects</core:set>
+<core:if test="${DebugClarity}">
+	<gel:log/><gel:log>httpRESTURL: ${httpRESTURL}</gel:log>
+</core:if>
+<core:new className="java.net.URL" var="remoteURL" >
+	<core:arg type="java.lang.String" value="${httpRESTURL}" />
+</core:new>
+
+ <!-- *** Setting Connection Details *** -->
+<core:set var="ClarityConnection" value="${remoteURL.openConnection()}"/> 
+<core:expr value="${ClarityConnection.setDoOutput(true)}" />
+<core:expr value="${ClarityConnection.setDoInput(true)}" />
+<core:expr value="${ClarityConnection.setConnectTimeout(180000)}" />
+<core:expr value="${ClarityConnection.setReadTimeout(180000)}" />
+
+<core:expr value='${ClarityConnection.setRequestMethod("POST")}'/>
+
+<core:expr value='${ClarityConnection.setRequestProperty("Content-type", "application/json")}'/>
+<core:expr value='${ClarityConnection.setRequestProperty("Accept", "application/json")}'/>        
+<core:expr value='${ClarityConnection.setRequestProperty("cache-control", "no-cache")}'/>
+<core:expr value='${ClarityConnection.setRequestProperty("Authorization",  basicAuth)}'/>
+
+<!-- *** Sending Request for psodting details from Connection ***   -->        
+<core:set var="void" value="${ClarityConnection.connect()}"/>
+
+<!-- *** Setting Project creation variable ***   -->    
+ <core:set var="CreateProject" escapeText="false">
+	<![CDATA[{"code": "P0000004",  "name": "ProjectNameChange"}]]>
+</core:set>
+    <core:new className="java.io.OutputStreamWriter" var="wr1">
+      <core:arg type="java.io.OutputStream" value="${ClarityConnection.getOutputStream()}"/>
+    </core:new>
+	<core:set var="void" value="${wr1.write(CreateProject)}"/>
+	<core:set var="void" value="${wr1.flush()}"/>
+	<core:set var="void" value="${wr1.close()}"/>
+		
+	 <!-- *** Fetching Responce from Connection ***  -->               
+	<core:set var="CL_isAuthenticated" value="${ClarityConnection.getHeaderField(0)}" />
+	<core:set var="response_msg" value="${ClarityConnection.getResponseMessage()}" />
+	<core:if test="${DebugClarity}">
+		<gel:log>isAuthenticated: ${CL_isAuthenticated}</gel:log>
+		<gel:log>response_msg:  ${response_msg}</gel:log>
+	</core:if>
+    <core:if test="${CL_isAuthenticated == 'HTTP/1.1 200'}">
+         <gel:log><![CDATA[************ Project Created Successfully *********]]></gel:log>                          
+    </core:if>
+    <core:if test="${CL_isAuthenticated != 'HTTP/1.1 200'}">
+        <gel:log><![CDATA[************ Error while creating Project *********]]></gel:log>                          
+    </core:if>
+<!--	
+	<core:expr value='${ClarityConnection.setRequestMethod("PUT")}'/>	       
+<core:set var="void" value="${ClarityConnection.connect()}"/>  
+ <core:set var="updateProject" escapeText="false">
+	<![CDATA[{"code": "P0000001",  "name": "ProjectNameChange by Update PUT Methos"}]]>
+</core:set>
+    <core:new className="java.io.OutputStreamWriter" var="wr1">
+      <core:arg type="java.io.OutputStream" value="${ClarityConnection.getOutputStream()}"/>
+    </core:new>
+	<core:set var="void" value="${wr1.write(updateProject)}"/>
+	<core:set var="void" value="${wr1.flush()}"/>
+	<core:set var="void" value="${wr1.close()}"/>
+	
+	             
+	<core:set var="CL_isAuthenticated" value="${ClarityConnection.getHeaderField(0)}" />
+	<core:set var="response_msg" value="${ClarityConnection.getResponseMessage()}" />
+	<core:if test="${DebugClarity}">
+		<gel:log>_______isAuthenticated: ${CL_isAuthenticated}</gel:log>
+		<gel:log>_______response_msg:  ${response_msg}</gel:log>
+	</core:if>
+	-->
+	<!--
+        <core:invokeStatic className="java.lang.System"   method="currentTimeMillis" var="milEnd02"/>
+            <core:set var="elapsedTime"   value="${(milEnd02 – milStart00)}"/>
+    <core:if test="${DebugTimings}"><gel:log><![CDATA[Time taken to extract Information= ${elapsedTime/1000} sec ]]></gel:log></core:if>   
+	-->
+ </core:catch>
+ 
+ 
+<core:if test="${SuperException!=null}">
+	<gel:log>Super Exception — ${SuperException}</gel:log>
+</core:if>
+	<!--
+    <core:invokeStatic className="java.lang.System"   method="currentTimeMillis" var="milEnd00"/>
+    <core:set var="elapsedTime"   value="${(milEnd00 – milStart00)}"/>
+    <core:if test="${DebugTimings}"><gel:log><![CDATA[Time taken by script= ${elapsedTime/1000} sec ]]></gel:log></core:if>
+	-->
+</gel:script>
